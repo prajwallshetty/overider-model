@@ -134,7 +134,11 @@ def attempt_load(weights, map_location=None):
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
-        model.append(torch.load(w, map_location=map_location)['model'].float().fuse().eval())  # load FP32 model
+        try:
+            ckpt = torch.load(w, map_location=map_location, weights_only=False)
+        except TypeError:
+            ckpt = torch.load(w, map_location=map_location)
+        model.append(ckpt['model'].float().fuse().eval())  # load FP32 model
 
     if len(model) == 1:
         return model[-1]  # return model
